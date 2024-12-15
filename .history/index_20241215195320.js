@@ -49,7 +49,7 @@ async function run() {
 
    app.get('/campaign/:id', async (req, res) => {
     const { id } = req.params;
-    const query = { _id: new ObjectId(id) };
+    const query = { _id: new ObjectId(id) }; // Make sure to import ObjectId
     const campaign = await campaignCollection.findOne(query);
     res.send(campaign);
   });

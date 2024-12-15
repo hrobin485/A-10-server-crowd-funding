@@ -34,11 +34,12 @@ async function run() {
 
   const campaignCollection = client.db('campaignDB').collection('campaign');
 
-  app.get('/campaign',async(req,res)=>{
-    const cursor = campaignCollection.find();
+  app.get('/campaign', async (req, res) => {
+    const currentDate = new Date();
+    const cursor = campaignCollection.find({ deadline: { $gte: currentDate } }).limit(6); // Filter and limit
     const result = await cursor.toArray();
     res.send(result);
-   })
+  });
 
    app.post('/campaign',async(req,res)=>{
     const newCampaign = req.body;

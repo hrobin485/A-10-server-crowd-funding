@@ -2,12 +2,8 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion } = require('mongodb');
-
-const { ObjectId } = require('mongodb');
-
 const app = express();
 const port = process.env.PORT || 5000;
-
 
 //middleware
 app.use(cors());
@@ -47,11 +43,17 @@ async function run() {
     res.send(result);
    })
 
-   app.get('/campaign/:id', async (req, res) => {
-    const { id } = req.params;
-    const query = { _id: new ObjectId(id) };
-    const campaign = await campaignCollection.findOne(query);
-    res.send(campaign);
+   app.get("/campaigns/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const campaign = await Campaign.findById(id); // Assuming a MongoDB database
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      res.json(campaign);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching campaign details" });
+    }
   });
   
 

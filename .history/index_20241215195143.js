@@ -2,12 +2,8 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion } = require('mongodb');
-
-const { ObjectId } = require('mongodb');
-
 const app = express();
 const port = process.env.PORT || 5000;
-
 
 //middleware
 app.use(cors());
@@ -46,10 +42,10 @@ async function run() {
     const result = await campaignCollection.insertOne(newCampaign);
     res.send(result);
    })
-
+   
    app.get('/campaign/:id', async (req, res) => {
     const { id } = req.params;
-    const query = { _id: new ObjectId(id) };
+    const query = { _id: new ObjectId(id) }; // Make sure to import ObjectId
     const campaign = await campaignCollection.findOne(query);
     res.send(campaign);
   });
