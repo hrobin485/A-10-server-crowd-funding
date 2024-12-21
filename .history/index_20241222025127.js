@@ -29,7 +29,6 @@ async function run() {
     await client.connect();
 
     const campaignCollection = client.db('campaignDB').collection('campaign');
-    const userCollection = client.db('userDB').collection('users'); // Add user collection
 
     // Endpoint to get all campaigns
     app.get('/campaign', async (req, res) => {
@@ -52,26 +51,6 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const campaign = await campaignCollection.findOne(query);
       res.send(campaign);
-    });
-
-    // Endpoint to handle Firebase user registration
-    app.post('/register-firebase', async (req, res) => {
-      const user = req.body;
-
-      try {
-        // Check if the user already exists in the database
-        const existingUser = await userCollection.findOne({ email: user.email });
-        if (existingUser) {
-          return res.status(200).json({ message: 'User already exists' });
-        }
-
-        // Insert new user into the database
-        const result = await userCollection.insertOne(user);
-        res.status(201).json({ message: 'User registered successfully', user: result.ops[0] });
-      } catch (error) {
-        console.error('Error registering Firebase user:', error);
-        res.status(500).json({ message: 'Error registering user' });
-      }
     });
 
     // Send a ping to confirm a successful connection
