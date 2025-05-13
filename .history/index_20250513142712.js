@@ -150,23 +150,28 @@ app.get("/campaign", async (req, res) => {
 
 
 // Get campaign by ID
-// app.get('/campaign/:id', async (req, res) => {
-//   const { id } = req.params;
-//   const campaign = await campaignsCollection.findOne({ _id: new ObjectId(id) });
-//   if (!campaign) return res.status(404).send({ message: "Not found" });
-//   res.send(campaign);
-// });
+app.get('/campaign/:id', async (req, res) => {
+  const { id } = req.params;
+  const campaign = await campaignsCollection.findOne({ _id: new ObjectId(id) });
+  if (!campaign) return res.status(404).send({ message: "Not found" });
+  res.send(campaign);
+});
 
 // Update campaign
 app.put('/campaign/:id', async (req, res) => {
   const { id } = req.params;
+  console.log("Received ID:", id);  // Log the received ID
+
   const updatedCampaign = req.body;
+  console.log("Updated Campaign:", updatedCampaign); // Log the updated campaign data
 
   try {
     const result = await campaignsCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: updatedCampaign }
     );
+    console.log("Update Result:", result);  // Log the result from MongoDB
+
     if (result.matchedCount === 0) {
       return res.status(404).send({ error: "Campaign not found" });
     }
@@ -176,9 +181,6 @@ app.put('/campaign/:id', async (req, res) => {
     res.status(500).send({ error: "Failed to update campaign" });
   }
 });
-
-
-
 
 
 

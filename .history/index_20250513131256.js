@@ -149,43 +149,6 @@ app.get("/campaign", async (req, res) => {
 
 
 
-// Get campaign by ID
-// app.get('/campaign/:id', async (req, res) => {
-//   const { id } = req.params;
-//   const campaign = await campaignsCollection.findOne({ _id: new ObjectId(id) });
-//   if (!campaign) return res.status(404).send({ message: "Not found" });
-//   res.send(campaign);
-// });
-
-// Update campaign
-app.put('/campaign/:id', async (req, res) => {
-  const { id } = req.params;
-  const updatedCampaign = req.body;
-
-  try {
-    const result = await campaignsCollection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: updatedCampaign }
-    );
-    if (result.matchedCount === 0) {
-      return res.status(404).send({ error: "Campaign not found" });
-    }
-    res.send({ message: "Campaign updated", result });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ error: "Failed to update campaign" });
-  }
-});
-
-
-
-
-
-
-
-
-
-
 
 
 

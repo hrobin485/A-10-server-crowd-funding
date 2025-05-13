@@ -160,19 +160,27 @@ app.get("/campaign", async (req, res) => {
 // Update campaign
 app.put('/campaign/:id', async (req, res) => {
   const { id } = req.params;
+
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).send({ error: "Invalid ID format" });
+  }
+
   const updatedCampaign = req.body;
+  console.log("Updating campaign:", id, updatedCampaign);
 
   try {
-    const result = await campaignsCollection.updateOne(
+    const result = await campaignCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: updatedCampaign }
     );
+
     if (result.matchedCount === 0) {
       return res.status(404).send({ error: "Campaign not found" });
     }
+
     res.send({ message: "Campaign updated", result });
   } catch (error) {
-    console.error(error);
+    console.error("Update error:", error);
     res.status(500).send({ error: "Failed to update campaign" });
   }
 });

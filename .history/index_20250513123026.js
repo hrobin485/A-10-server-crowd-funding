@@ -26,10 +26,11 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server (optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const campaignCollection = client.db('campaignDB').collection('campaign');
     const userCollection = client.db('userDB').collection('users'); // Add user collection
+    const donatedCollection = client.db('campaignDB').collection('donated'); // Add donated collection
 
     // Endpoint to get all campaigns
     app.get('/campaign', async (req, res) => {
@@ -55,22 +56,70 @@ async function run() {
     });
 
     // Endpoint to handle Firebase user registration
-    app.post('/register-firebase', async (req, res) => {
-      const user = req.body;
+   app.post('/register-firebase', async (req, res) => {
+  const user = req.body;
+
+  try {
+    // Check if the user already exists
+    const existingUser = await userCollection.findOne({ email: user.email });
+    if (existingUser) {
+      return res.status(200).json({ message: 'User already exists' });
+    }
+
+    // Insert new user
+    const result = await userCollection.insertOne(user);
+
+    // Fetch the inserted user using the insertedId
+    const insertedUser = await userCollection.findOne({ _id: result.insertedId });
+
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: insertedUser,
+    });
+  } catch (error) {
+    console.error('Error registering Firebase user:', error);
+    res.status(500).json({ message: 'Error registering user' });
+  }
+});
+
+
+    // Endpoint to handle donation
+    app.post('/donate', async (req, res) => {
+      const { campaignId, campaignName, userEmail, userName, donatedAt } = req.body;
+
+      if (!campaignId || !userEmail || !userName) {
+        return res.status(400).json({ error: 'All fields are required' });
+      }
+
+      const donationData = {
+        campaignId,
+        campaignName,
+        userEmail,
+        userName,
+        donatedAt,
+      };
 
       try {
-        // Check if the user already exists in the database
-        const existingUser = await userCollection.findOne({ email: user.email });
-        if (existingUser) {
-          return res.status(200).json({ message: 'User already exists' });
-        }
-
-        // Insert new user into the database
-        const result = await userCollection.insertOne(user);
-        res.status(201).json({ message: 'User registered successfully', user: result.ops[0] });
+        const result = await donatedCollection.insertOne(donationData);
+        res.status(201).json({ message: 'Donation recorded successfully', result });
       } catch (error) {
-        console.error('Error registering Firebase user:', error);
-        res.status(500).json({ message: 'Error registering user' });
+        console.error('Error saving donation:', error);
+        res.status(500).json({ error: 'Failed to save donation data' });
+      }
+    });
+
+
+    // Fetch donated campaigns for a specific user
+    app.get('/donated', async (req, res) => {
+      const { userEmail } = req.query; // Get userEmail from query params
+      const query = { userEmail };
+
+      try {
+        const donatedCampaigns = await donatedCollection.find(query).toArray();
+        res.json(donatedCampaigns); // Send the donated campaigns as a response
+      } catch (error) {
+        console.error("Error fetching donated campaigns:", error);
+        res.status(500).json({ error: 'Failed to fetch donated campaigns' });
       }
     });
 
