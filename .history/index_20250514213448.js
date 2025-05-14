@@ -131,6 +131,7 @@ app.get("/campaign", async (req, res) => {
 // Delete campaign
 app.delete('/campaign/:id', async (req, res) => {
   const { id } = req.params;
+
   
   try {
     const result = await campaignCollection.deleteOne({ _id: new ObjectId(id) });

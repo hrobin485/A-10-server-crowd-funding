@@ -113,7 +113,19 @@ app.post('/donate', async (req, res) => {
       }
     });
 
-    // GET /my-campaigns?email=user@example.com
+    // Send a ping to confirm a successful connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } finally {
+    // Ensures that the client will close when you finish/error
+    // await client.close();
+  }
+}
+run().catch(console.dir);
+
+
+
+// GET /my-campaigns?email=user@example.com
 app.get("/campaign", async (req, res) => {
   const email = req.query.email;
   if (!email) return res.status(400).send({ message: "Email is required" });
@@ -131,6 +143,7 @@ app.get("/campaign", async (req, res) => {
 // Delete campaign
 app.delete('/campaign/:id', async (req, res) => {
   const { id } = req.params;
+
   
   try {
     const result = await campaignCollection.deleteOne({ _id: new ObjectId(id) });
@@ -153,6 +166,7 @@ app.delete('/campaign/:id', async (req, res) => {
 app.put("/campaign/:id", async (req, res) => {
   const { id } = req.params;
   const updatedCampaign = req.body;
+
   try {
     const result = await campaignCollection.updateOne(
       { _id: new ObjectId(id) },
@@ -193,20 +207,6 @@ app.put("/campaign/:id", async (req, res) => {
 
 
 
-
-
-
-
-
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
-  }
-}
-run().catch(console.dir);
 
 
 

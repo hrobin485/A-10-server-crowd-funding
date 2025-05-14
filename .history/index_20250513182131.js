@@ -29,17 +29,17 @@ async function run() {
     // await client.connect();
 
     const campaignCollection = client.db('campaignDB').collection('campaign');
-    const userCollection = client.db('userDB').collection('users'); 
-    const donatedCollection = client.db('campaignDB').collection('donated'); 
+    const userCollection = client.db('userDB').collection('users'); // Add user collection
+    const donatedCollection = client.db('campaignDB').collection('donated'); // Add donated collection
 
-    //  get all campaigns
+    // Endpoint to get all campaigns
     app.get('/campaign', async (req, res) => {
       const cursor = campaignCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
 
-    //  add a new campaign
+    // Endpoint to add a new campaign
     app.post('/campaign', async (req, res) => {
       const newCampaign = req.body;
       console.log(newCampaign);
@@ -47,7 +47,7 @@ async function run() {
       res.send(result);
     });
 
-    //  get a specific campaign by ID
+    // Endpoint to get a specific campaign by ID
     app.get('/campaign/:id', async (req, res) => {
       const { id } = req.params;
       const query = { _id: new ObjectId(id) };
@@ -55,7 +55,7 @@ async function run() {
       res.send(campaign);
     });
 
-    //  handle Firebase user registration
+    // Endpoint to handle Firebase user registration
    app.post('/register-firebase', async (req, res) => {
   const user = req.body;
 
@@ -69,6 +69,7 @@ async function run() {
     // Insert new user
     const result = await userCollection.insertOne(user);
 
+    // Fetch the inserted user using the insertedId
     const insertedUser = await userCollection.findOne({ _id: result.insertedId });
 
     res.status(201).json({
@@ -82,21 +83,30 @@ async function run() {
 });
 
 
-//  handle donation
-app.post('/donate', async (req, res) => {
-  const donation = req.body;
+    // Endpoint to handle donation
+    app.post('/donate', async (req, res) => {
+      const { campaignId, campaignName, userEmail, userName, donatedAt } = req.body;
 
-  try {
-    const result = await donationsCollection.insertOne(donation);
-    res.status(200).send({ success: true, result });
-  } catch (error) {
-    console.error('Error saving donation:', error);
-    res.status(500).send({ success: false, error: 'Failed to save donation' });
-  }
-});
+      if (!campaignId || !userEmail || !userName) {
+        return res.status(400).json({ error: 'All fields are required' });
+      }
 
+      const donationData = {
+        campaignId,
+        campaignName,
+        userEmail,
+        userName,
+        donatedAt,
+      };
 
-
+      try {
+        const result = await donatedCollection.insertOne(donationData);
+        res.status(201).json({ message: 'Donation recorded successfully', result });
+      } catch (error) {
+        console.error('Error saving donation:', error);
+        res.status(500).json({ error: 'Failed to save donation data' });
+      }
+    });
 
 
     // Fetch donated campaigns for a specific user
@@ -113,7 +123,19 @@ app.post('/donate', async (req, res) => {
       }
     });
 
-    // GET /my-campaigns?email=user@example.com
+    // Send a ping to confirm a successful connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } finally {
+    // Ensures that the client will close when you finish/error
+    // await client.close();
+  }
+}
+run().catch(console.dir);
+
+
+
+// GET /my-campaigns?email=user@example.com
 app.get("/campaign", async (req, res) => {
   const email = req.query.email;
   if (!email) return res.status(400).send({ message: "Email is required" });
@@ -127,17 +149,28 @@ app.get("/campaign", async (req, res) => {
 
 
 
+// Get campaign by ID
+app.get('/campaign/:id', async (req, res) => {
+  const { id } = req.params;
+  const campaign = await campaignsCollection.findOne({ _id: new ObjectId(id) });
+  if (!campaign) return res.status(404).send({ message: "Not found" });
+  res.send(campaign);
+});
 
 // Delete campaign
+// Assuming you are using Express
 app.delete('/campaign/:id', async (req, res) => {
   const { id } = req.params;
+  console.log(`Attempting to delete campaign with ID: ${id}`);  // Log to verify the backend is receiving the request
   
   try {
     const result = await campaignCollection.deleteOne({ _id: new ObjectId(id) });
     
     if (result.deletedCount === 1) {
+      console.log("Campaign deleted successfully");
       return res.status(200).json({ message: "Campaign deleted successfully" });
     } else {
+      console.log("Campaign not found");
       return res.status(404).json({ message: "Campaign not found" });
     }
   } catch (error) {
@@ -149,10 +182,15 @@ app.delete('/campaign/:id', async (req, res) => {
 
 
 
+
+
+
+
 // Update campaign by ID
 app.put("/campaign/:id", async (req, res) => {
   const { id } = req.params;
   const updatedCampaign = req.body;
+
   try {
     const result = await campaignCollection.updateOne(
       { _id: new ObjectId(id) },
@@ -192,21 +230,6 @@ app.put("/campaign/:id", async (req, res) => {
 
 
 
-
-
-
-
-
-
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
-  }
-}
-run().catch(console.dir);
 
 
 
